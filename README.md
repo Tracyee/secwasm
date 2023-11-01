@@ -1,4 +1,4 @@
-# secwasm Project - May 2023
+# secwasm Project - Oct 2023
 
 - Implementation of a security-typesystem following [this](https://plas2022.github.io/files/pdf/SecWasm.pdf) paper
 - Security guarantee: termination-insensitive non-interference
@@ -10,8 +10,9 @@
 - Otherwise, the following manual setup is possible
 
 ### Dependencies
-- Ocaml version 4, `dune` version 3.7
+- Ocaml version 5, `dune` version 3.10
 - Webassembly binary toolkit: `wabt`, provides `wat2wasm` and `wasm2wat` among others
+- wasmtime
 - Nodejs: version 18 or 19
 - perf-tool for benchmarking, debian package name: `linux-perf`
 
@@ -20,7 +21,7 @@
 - Run the project with the Makefile in `src/`
 
 ### Development dependencies
-- Ocaml formatting tool: `opam pin add ocamlformat 0.21.0` `opam install ocamlformat`
+- Ocaml formatting tool: `opam pin add ocamlformat 0.26.0` `opam install ocamlformat`
 - Pre-commit hook to ensure formatting: `pip install pre-commit` then in the root repo: `pre-commit install`
 
 ## Running the tool
