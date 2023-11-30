@@ -44,7 +44,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Const 1; WI_Const 1; WI_BinOp Add ];
+            body = [ WI_Const (1, I32); WI_Const (1, I32); WI_BinOp (Add, I32) ];
             export_name = None;
           };
         ];
@@ -72,7 +72,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Const 1; WI_BinOp Add ];
+            body = [ WI_Const (1, I32); WI_BinOp (Add, I32) ];
             export_name = None;
           };
         ];
@@ -151,7 +151,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [ { t = I32; lbl = Public } ];
-            body = [ WI_Const 42; WI_Drop ];
+            body = [ WI_Const (42, I32); WI_Drop ];
             export_name = None;
           };
         ];
@@ -258,7 +258,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Public };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = true;
           };
         ];
@@ -268,7 +268,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 42; WI_GlobalSet 0 ];
+            body = [ WI_Const (42, I32); WI_GlobalSet 0 ];
             export_name = None;
           };
         ];
@@ -322,7 +322,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Public };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = false;
           };
         ];
@@ -332,7 +332,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 42; WI_GlobalSet 0 ];
+            body = [ WI_Const (42, I32); WI_GlobalSet 0 ];
             export_name = None;
           };
         ];
@@ -360,7 +360,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 42; WI_GlobalSet 0 ];
+            body = [ WI_Const (42, I32); WI_GlobalSet 0 ];
             export_name = None;
           };
         ];
@@ -392,12 +392,12 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = false;
           };
           {
             gtype = { t = I32; lbl = Public };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = true;
           };
         ];
@@ -407,7 +407,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_GlobalGet 0; WI_Const 1; WI_BinOp Add; WI_GlobalSet 1 ];
+            body = [ WI_GlobalGet 0; WI_Const (1, I32); WI_BinOp (Add, I32); WI_GlobalSet 1 ];
             export_name = None;
           };
         ];
@@ -435,7 +435,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [ { t = I32; lbl = Public } ];
-            body = [ WI_Const 42; WI_LocalSet 0 ];
+            body = [ WI_Const (42, I32); WI_LocalSet 0 ];
             export_name = None;
           };
         ];
@@ -493,7 +493,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = false;
           };
         ];
@@ -531,7 +531,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Const 0; WI_Load Public ];
+            body = [ WI_Const (0, I32); WI_Load (Public, I32) ];
             export_name = None;
           };
         ];
@@ -559,7 +559,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Load Public ];
+            body = [ WI_Load (Public, I32) ];
             export_name = None;
           };
         ];
@@ -587,7 +587,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Const 0; WI_Load Public ];
+            body = [ WI_Const (0, I32); WI_Load (Public, I32) ];
             export_name = None;
           };
         ];
@@ -615,7 +615,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 0; WI_Const 0; WI_Store Public ];
+            body = [ WI_Const (0, I32); WI_Const (0, I32); WI_Store (Public, I32) ];
             export_name = None;
           };
         ];
@@ -644,7 +644,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 0; WI_Const 42; WI_Store Public ];
+            body = [ WI_Const (0, I32); WI_Const (42, I32); WI_Store (Public, I32) ];
             export_name = None;
           };
         ];
@@ -675,7 +675,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = false;
           };
         ];
@@ -685,7 +685,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 0; WI_GlobalGet 0; WI_Store Public ];
+            body = [ WI_Const (0, I32); WI_GlobalGet 0; WI_Store (Public, I32) ];
             export_name = None;
           };
         ];
@@ -713,7 +713,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Store Public ];
+            body = [ WI_Store (Public, I32) ];
             export_name = None;
           };
         ];
@@ -745,12 +745,12 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = false;
           };
           {
             gtype = { t = I32; lbl = Public };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = true;
           };
         ];
@@ -760,7 +760,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_GlobalGet 0; WI_Load Public; WI_GlobalSet 1 ];
+            body = [ WI_GlobalGet 0; WI_Load (Public, I32); WI_GlobalSet 1 ];
             export_name = None;
           };
         ];
@@ -854,7 +854,7 @@ let _ =
             locals = [];
             body =
               [
-                WI_Const 42;
+                WI_Const (42, I32);
                 WI_Block
                   (BlockType ([ { t = I32; lbl = Public } ], []), [ WI_Drop ]);
               ];
@@ -921,7 +921,7 @@ let _ =
             locals = [];
             body =
               [
-                WI_Const 42;
+                WI_Const (42, I32);
                 WI_Block
                   ( BlockType
                       ( [ { t = I32; lbl = Public } ],
@@ -958,7 +958,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 42 ];
+            const = [ WI_Const (42, I32) ];
             mut = false;
           };
         ];
@@ -1003,7 +1003,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 42 ];
+            const = [ WI_Const (42, I32) ];
             mut = false;
           };
         ];
@@ -1072,7 +1072,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 42 ];
+            const = [ WI_Const (42, I32) ];
             mut = false;
           };
         ];
@@ -1138,7 +1138,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 0 ];
+            body = [ WI_Const (0, I32) ];
             export_name = None;
           };
         ];
@@ -1167,13 +1167,13 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Const 0 ];
+            body = [ WI_Const (0, I32) ];
             export_name = None;
           };
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Call 0; WI_Const 1; WI_BinOp Add ];
+            body = [ WI_Call 0; WI_Const (1, I32); WI_BinOp (Add, I32) ];
             export_name = None;
           };
         ];
@@ -1201,7 +1201,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Const 1; WI_Call 0 ];
+            body = [ WI_Const (1, I32); WI_Call 0 ];
             export_name = None;
           };
         ];
@@ -1233,7 +1233,7 @@ let _ =
                   Public,
                   [ { t = I32; lbl = Public } ] );
             locals = [];
-            body = [ WI_Const 0 ];
+            body = [ WI_Const (0, I32) ];
             export_name = None;
           };
           {
@@ -1294,7 +1294,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = false;
           };
         ];
@@ -1452,7 +1452,7 @@ let _ =
           {
             ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
             locals = [];
-            body = [ WI_Const 1; WI_Const 2; WI_Const 3 ];
+            body = [ WI_Const (1, I32); WI_Const (2, I32); WI_Const (3, I32) ];
             export_name = None;
           };
         ];
@@ -1549,7 +1549,7 @@ let _ =
                   Public,
                   [ { t = I32; lbl = Public } ] );
             locals = [];
-            body = [ WI_Block (BlockType ([], []), [ WI_Br 0 ]); WI_Const 42 ];
+            body = [ WI_Block (BlockType ([], []), [ WI_Br 0 ]); WI_Const (42, I32) ];
             export_name = None;
           };
         ];
@@ -1625,7 +1625,7 @@ let _ =
               [
                 WI_Block
                   ( BlockType ([], [ { t = I32; lbl = Public } ]),
-                    [ WI_Block (BlockType ([], []), [ WI_Br 0 ]); WI_Const 42 ]
+                    [ WI_Block (BlockType ([], []), [ WI_Br 0 ]); WI_Const (42, I32) ]
                   );
               ];
             export_name = None;
@@ -1669,7 +1669,7 @@ let _ =
               [
                 WI_Block
                   ( BlockType ([], [ { t = I32; lbl = Public } ]),
-                    [ WI_Block (BlockType ([], []), [ WI_Br 1 ]); WI_Const 42 ]
+                    [ WI_Block (BlockType ([], []), [ WI_Br 1 ]); WI_Const (42, I32) ]
                   );
               ];
             export_name = None;
@@ -1796,8 +1796,8 @@ let _ =
             locals = [];
             body =
               [
-                WI_Block (BlockType ([], []), [ WI_Const 1; WI_BrIf 0 ]);
-                WI_Const 42;
+                WI_Block (BlockType ([], []), [ WI_Const (1, I32); WI_BrIf 0 ]);
+                WI_Const (42, I32);
               ];
             export_name = None;
           };
@@ -1863,7 +1863,7 @@ let _ =
               [
                 WI_Block
                   ( BlockType ([], [ { t = I32; lbl = Public } ]),
-                    [ WI_Const 0; WI_BrIf 0 ] );
+                    [ WI_Const (0, I32); WI_BrIf 0 ] );
               ];
             export_name = None;
           };
@@ -1894,7 +1894,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 42 ];
+            const = [ WI_Const (42, I32) ];
             mut = false;
           };
         ];
@@ -1942,7 +1942,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 42 ];
+            const = [ WI_Const (42, I32) ];
             mut = false;
           };
         ];
@@ -1956,7 +1956,7 @@ let _ =
               [
                 WI_Block
                   ( BlockType ([], [ { t = I32; lbl = Public } ]),
-                    [ WI_Const 0; WI_GlobalGet 0; WI_BrIf 0 ] );
+                    [ WI_Const (0, I32); WI_GlobalGet 0; WI_BrIf 0 ] );
                 WI_Drop;
               ];
             export_name = None;
@@ -1988,7 +1988,7 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 42 ];
+            const = [ WI_Const (42, I32) ];
             mut = false;
           };
         ];
@@ -2002,7 +2002,7 @@ let _ =
               [
                 WI_Block
                   ( BlockType ([], [ { t = I32; lbl = Public } ]),
-                    [ WI_GlobalGet 0; WI_Const 0; WI_BrIf 0 ] );
+                    [ WI_GlobalGet 0; WI_Const (0, I32); WI_BrIf 0 ] );
               ];
             export_name = None;
           };
@@ -2035,7 +2035,7 @@ let _ =
             ftype = FunType ([], Public, []);
             locals = [];
             body =
-              [ WI_Block (BlockType ([], []), [ WI_Const 1; WI_BrIf (-1) ]) ];
+              [ WI_Block (BlockType ([], []), [ WI_Const (1, I32); WI_BrIf (-1) ]) ];
             export_name = None;
           };
         ];
@@ -2066,7 +2066,7 @@ let _ =
           {
             ftype = FunType ([], Public, []);
             locals = [];
-            body = [ WI_Block (BlockType ([], []), [ WI_Const 1; WI_BrIf 2 ]) ];
+            body = [ WI_Block (BlockType ([], []), [ WI_Const (1, I32); WI_BrIf 2 ]) ];
             export_name = None;
           };
         ];
@@ -2102,12 +2102,12 @@ let _ =
         [
           {
             gtype = { t = I32; lbl = Secret };
-            const = [ WI_Const 1 ];
+            const = [ WI_Const (1, I32) ];
             mut = false;
           };
           {
             gtype = { t = I32; lbl = Public };
-            const = [ WI_Const 0 ];
+            const = [ WI_Const (0, I32) ];
             mut = true;
           };
         ];
@@ -2124,9 +2124,9 @@ let _ =
                     [
                       WI_Block
                         ( BlockType ([], []),
-                          [ WI_GlobalGet 0; WI_Const 0; WI_BinOp Eq; WI_BrIf 1 ]
+                          [ WI_GlobalGet 0; WI_Const (0, I32); WI_BinOp (Eq, I32); WI_BrIf 1 ]
                         );
-                      WI_Const 1;
+                      WI_Const (1, I32);
                       WI_GlobalSet 1;
                     ] );
               ];
@@ -2166,12 +2166,12 @@ let _ =
           [
             {
               gtype = { t = I32; lbl = Secret };
-              const = [ WI_Const 1 ];
+              const = [ WI_Const (1, I32) ];
               mut = false;
             };
             {
               gtype = { t = I32; lbl = Public };
-              const = [ WI_Const 0 ];
+              const = [ WI_Const (0, I32) ];
               mut = true;
             };
           ];
@@ -2188,9 +2188,9 @@ let _ =
                       [
                         WI_Block
                           ( BlockType ([], []),
-                            [ WI_GlobalGet 0; WI_Const 0; WI_BinOp Eq; WI_BrIf 0; WI_Br 1]
+                            [ WI_GlobalGet 0; WI_Const (0, I32); WI_BinOp (Eq, I32); WI_BrIf 0; WI_Br 1]
                           );
-                        WI_Const 1;
+                        WI_Const (1, I32);
                         WI_GlobalSet 1;
                       ] );
                 ];

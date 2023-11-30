@@ -114,29 +114,29 @@ let rec pp_instruction (indent : int) (instr : wasm_instruction) =
   match instr with
   | WI_Unreachable -> "unreachable"
   | WI_Nop -> "nop"
-  | WI_Const (v, value_type) -> (pp_type value_type) ^ ".const " ^ Int.to_string v 
-  | WI_BinOp (binop, value_type) ->
-    match binop with ->
-    | Add -> (pp_type value_type) ^ ".add"
-    | Mul -> (pp_type value_type) ^ ".mul"
-    | Eq -> (pp_type value_type) ^ ".eq"
-    | Ge_s -> (pp_type value_type) ^ ".ge_s"
-    | Le_s -> (pp_type value_type) ^ ".le_s"
-    | Lt_s -> (pp_type value_type) ^ ".lt_s"
-    | Lt_u -> (pp_type value_type) ^ ".lt_u"
-    | Sub -> (pp_type value_type) ^ ".sub"
-    | Shr_u -> (pp_type value_type) ^ ".shr_u"
-    | Shl -> (pp_type value_type) ^ ".shl"
-    | And -> (pp_type value_type) ^ ".and"
-    | Or -> (pp_type value_type) ^ ".or"
+  | WI_Const (v, vt) -> (pp_type vt) ^ ".const " ^ Int.to_string v 
+  | WI_BinOp (bop, vt) ->
+    (match bop with
+    | Add -> (pp_type vt) ^ ".add"
+    | Mul -> (pp_type vt) ^ ".mul"
+    | Eq -> (pp_type vt) ^ ".eq"
+    | Ge_s -> (pp_type vt) ^ ".ge_s"
+    | Le_s -> (pp_type vt) ^ ".le_s"
+    | Lt_s -> (pp_type vt) ^ ".lt_s"
+    | Lt_u -> (pp_type vt) ^ ".lt_u"
+    | Sub -> (pp_type vt) ^ ".sub"
+    | Shr_u -> (pp_type vt) ^ ".shr_u"
+    | Shl -> (pp_type vt) ^ ".shl"
+    | And -> (pp_type vt) ^ ".and"
+    | Or -> (pp_type vt) ^ ".or")
   | WI_Call idx -> "call " ^ Int.to_string idx
   | WI_Drop -> "drop"
   | WI_LocalGet idx -> "local.get " ^ Int.to_string idx
   | WI_LocalSet idx -> "local.set " ^ Int.to_string idx
   | WI_GlobalGet idx -> "global.get " ^ Int.to_string idx
   | WI_GlobalSet idx -> "global.set " ^ Int.to_string idx
-  | WI_Load (_, value_type) -> (pp_type value_type) ^ ".load" 
-  | WI_Store (_, value_type) -> (pp_type value_type) ^ ".store"
+  | WI_Load (_, vt) -> (pp_type vt) ^ ".load" 
+  | WI_Store (_, vt) -> (pp_type vt) ^ ".store"
   | WI_Block (t, b) ->
       "block " ^ pp_block_type t ^ nl
       ^ pp_instructions (indent + 2) b

@@ -232,7 +232,7 @@ let rec check_instr ((g, c) : stack_of_stacks_type * context)
       | WI_Nop -> (g, c)
       | WI_Drop -> (
           match st with _ :: st' -> ((st', pc) :: g', c) | _ -> raise err_drop)
-      | WI_Const _ -> (({ t = I32; lbl = pc } :: st, pc) :: g', c)
+      | WI_Const (_, vt) -> (({ t = vt; lbl = pc } :: st, pc) :: g', c)
       | WI_BinOp _ -> (
           match st with
           | v1 :: v2 :: st' ->
@@ -282,17 +282,17 @@ let rec check_instr ((g, c) : stack_of_stacks_type * context)
               if not (l <> pc <<= l') then raise (err_globalset2 pc l l');
               ((st', pc) :: g', c)
           | _ -> raise err_globalset3)
-      | WI_Load lm -> (
+      | WI_Load (lm, _) -> (
           match c.memory with
           | None -> raise err_load_nomemory
           | Some _ -> (
               match st with
-              | { t = _; lbl = la } :: st ->
+              | { t; lbl = la } :: st ->
                   (* l = l_a ⊔ l_m ⊔ pc *)
                   let lbl = la <> lm <> pc in
-                  (({ t = I32; lbl } :: st, pc) :: g', c)
+                  (({ t; lbl } :: st, pc) :: g', c)
               | _ -> raise err_load_addrexists))
-      | WI_Store lm -> (
+      | WI_Store (lm, _) -> (
           match c.memory with
           | None -> raise err_store_nomemory
           | Some _ -> (

@@ -11,24 +11,24 @@ type context = {
 let push_bitmask0 (c : context) =
   [
     (* push 1111...111 *)
-    WI_Const (-1);
-    WI_Const 16;
-    WI_Const (log2 c.memory.size);
+    WI_Const (-1, I32);
+    WI_Const (16, I32);
+    WI_Const (log2 c.memory.size, I32);
     (* compute 16 - (log mem_size) *)
-    WI_BinOp Sub;
+    WI_BinOp (Sub, I32);
     (* shift 11111 right with 32 - (log mem_size) *)
-    WI_BinOp Shr_u
+    WI_BinOp (Shr_u, I32)
     (* = 01111111 where 0 is at index mem_size + 1 (from the right) *);
   ]
 
 let push_bitmask1 (c : context) =
   [
     (* Size of memory in bytes = mem_size * 64 * 2^10 = 2^(16 + log mem_size) *)
-    WI_Const 1;
-    WI_Const 16;
-    WI_Const (log2 c.memory.size);
-    WI_BinOp Add;
-    WI_BinOp Shl
+    WI_Const (1, I32);
+    WI_Const (16, I32);
+    WI_Const (log2 c.memory.size, I32);
+    WI_BinOp (Add, I32);
+    WI_BinOp (Shl, I32)
     (* = 100000 where 1 is at index log mem_size + 16 (from the right) *);
   ]
 
@@ -65,11 +65,11 @@ let translate_store (c : context) (encoded_lbl : int) :
             (* Top of the stack: 01111111 where 0 is at index mem_size (from the right) *)
             (* Next element    : addr *)
             (* Force addres into lower part of memory *)
-            WI_BinOp And;
+            WI_BinOp (And, I32);
             (* Get value *)
             WI_LocalGet idx_val;
             (* Store value - label doesn't matter *)
-            WI_Store Secret;
+            WI_Store (Secret, I32);
             (* === BEGIN STORE LABEL *)
             WI_LocalGet idx_addr;
           ]
@@ -78,11 +78,11 @@ let translate_store (c : context) (encoded_lbl : int) :
             (* Top of the stack: 1000000 where 1 is at index mem_size (from the right) *)
             (* Next element    : addr *)
             (* Force address into upper part of memory *)
-            WI_BinOp Or;
+            WI_BinOp (Or, I32);
             (* Push label on stack *)
-            WI_Const encoded_lbl;
+            WI_Const (encoded_lbl, I32);
             (* Store it - label doesn't matter *)
-            WI_Store Secret;
+            WI_Store (Secret, I32);
           ] ) )
 
 let translate_load_public (c : context) : context * wasm_instruction =
@@ -113,12 +113,12 @@ let translate_load_public (c : context) : context * wasm_instruction =
                   (* Top of the stack: 1000000 where 1 is at index mem_size (from the right) *)
                   (* Next element    : addr *)
                   (* Force address into upper part of memory *)
-                  WI_BinOp Or;
+                  WI_BinOp (Or, I32);
                   (* Load labels from memory (4 bytes, i.e. 4 labels) - label doesn't matter*)
-                  WI_Load Secret;
+                  WI_Load (Secret, I32);
                   (* Assert that all labels are 0 *)
-                  WI_Const 0;
-                  WI_BinOp Eq;
+                  WI_Const (0, I32);
+                  WI_BinOp (Eq, I32);
                   (* branch conditionally to the end of the block*)
                   WI_BrIf 0;
                   (* attempt to load secret into public value, trap! *)
@@ -131,9 +131,9 @@ let translate_load_public (c : context) : context * wasm_instruction =
             (* Top of the stack: 01111111 where 0 is at index mem_size (from the right) *)
             (* Next element    : addr *)
             (* Force addres into lower part of memory *)
-            WI_BinOp And;
+            WI_BinOp (And, I32);
             (* load value - label doesn't matter *)
-            WI_Load Secret;
+            WI_Load (Secret, I32);
           ] ) )
 
 let translate_load_secret (c : context) : context * wasm_instruction =
@@ -147,9 +147,9 @@ let translate_load_secret (c : context) : context * wasm_instruction =
             (* Top of the stack: 01111111 where 0 is at index mem_size (from the right) *)
             (* Next element    : addr *)
             (* Force addres into lower part of memory *)
-            WI_BinOp And;
+            WI_BinOp (And, I32);
             (* Load labels from memory (4 bytes, i.e. 4 labels) - label doesn't matter*)
-            WI_Load Secret;
+            WI_Load (Secret, I32);
           ] ) )
 
 let rec transform_seq (c : context) (seq : wasm_instruction list) :
@@ -167,11 +167,11 @@ let rec transform_seq (c : context) (seq : wasm_instruction list) :
 and transform_instr (c : context) (i : wasm_instruction) :
     context * wasm_instruction =
   match i with
-  | WI_Load l -> (
+  | WI_Load (l, _) -> (
       match l with
       | Public -> translate_load_public c
       | Secret -> translate_load_secret c)
-  | WI_Store l -> translate_store c (SimpleLattice.encode l)
+  | WI_Store (l, _) -> translate_store c (SimpleLattice.encode l)
   | WI_Block (bt, instr) ->
       let c', instr' = transform_seq c instr in
       (c', WI_Block (bt, instr'))
