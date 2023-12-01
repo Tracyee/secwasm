@@ -188,7 +188,10 @@ let pp_function (f : wasm_func) =
   "(func" ^ export ^ params ^ result ^ nl ^ locals ^ nl ^ body ^ nl ^ ")"
 
 let pp_global g =
-  let t = if g.mut then "(mut i32)" else "i32"
+  let t = 
+    match g.gtype.t with
+    | I32 -> if g.mut then "(mut i32)" else "i32"
+    | I64 -> if g.mut then "(mut i64)" else "i64"
   and init =
     match g.const with
     | [ instr ] -> pp_instruction 0 instr
