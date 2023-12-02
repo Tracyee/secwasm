@@ -2,7 +2,9 @@ open Sec
 
 [@@@coverage exclude_file]
 
-type value_type = I32
+type value_type = 
+  | I32
+  | I64
 
 (* This is equivalent to tau in the paper (typing judgements) *)
 type labeled_value_type = { t : value_type; lbl : SimpleLattice.t }
@@ -29,15 +31,15 @@ type binop =
 type wasm_instruction =
   | WI_Unreachable                                                    (* trap unconditionally *)
   | WI_Drop                                                           (* drop value *)
-  | WI_Const of int                                                   (* constant *)
-  | WI_BinOp of binop                                                 (* binary numeric operator, deviates a bit from spec *)
+  | WI_Const of (int * value_type)                                    (* constant *)
+  | WI_BinOp of (binop * value_type)                                  (* binary numeric operator, deviates a bit from spec *)
   | WI_Call of int                                                    (* call function *)
   | WI_LocalGet of int                                                (* read local variable *)
   | WI_LocalSet of int                                                (* write local variable *)
   | WI_GlobalGet of int                                               (* read global variable *)
   | WI_GlobalSet of int                                               (* write global variable *)
-  | WI_Load of SimpleLattice.t                                        (* read memory at address *)
-  | WI_Store of SimpleLattice.t                                       (* write memory at address *)
+  | WI_Load of (SimpleLattice.t * value_type)                         (* read memory at address *)
+  | WI_Store of (SimpleLattice.t * value_type)                        (* write memory at address *)
   | WI_Block of block_type * wasm_instruction list                    (* block *)
   | WI_Loop of block_type * wasm_instruction list                     (* loop *)
   | WI_Br of int                                                      (* unconditional branch *)
@@ -70,10 +72,12 @@ type wasm_module = {
 
 (************************* PRETTY PRINTING ************************************)
 
-let pp_type (t : value_type) = match t with I32 -> "i32"
+let pp_type (t : value_type) = match t with 
+  | I32 -> "i32"
+  | I64 -> "i64"
 
 let pp_labeled_type (t : labeled_value_type) =
-  pp_type t.t (* TODO: have separate pp *)
+  pp_type t.t (* TODO: have separate pp <== what is meant by this? *)
 
 let nl = "\n"
 
@@ -110,27 +114,29 @@ let rec pp_instruction (indent : int) (instr : wasm_instruction) =
   match instr with
   | WI_Unreachable -> "unreachable"
   | WI_Nop -> "nop"
-  | WI_Const v -> "i32.const " ^ Int.to_string v
-  | WI_BinOp Add -> "i32.add"
-  | WI_BinOp Mul -> "i32.mul"
-  | WI_BinOp Eq -> "i32.eq"
-  | WI_BinOp Ge_s -> "i32.ge_s"
-  | WI_BinOp Le_s -> "i32.le_s"
-  | WI_BinOp Lt_s -> "i32.lt_s"
-  | WI_BinOp Lt_u -> "i32.lt_u"
-  | WI_BinOp Sub -> "i32.sub"
-  | WI_BinOp Shr_u -> "i32.shr_u"
-  | WI_BinOp Shl -> "i32.shl"
-  | WI_BinOp And -> "i32.and"
-  | WI_BinOp Or -> "i32.or"
+  | WI_Const (v, vt) -> (pp_type vt) ^ ".const " ^ Int.to_string v 
+  | WI_BinOp (bop, vt) ->
+    (match bop with
+    | Add -> (pp_type vt) ^ ".add"
+    | Mul -> (pp_type vt) ^ ".mul"
+    | Eq -> (pp_type vt) ^ ".eq"
+    | Ge_s -> (pp_type vt) ^ ".ge_s"
+    | Le_s -> (pp_type vt) ^ ".le_s"
+    | Lt_s -> (pp_type vt) ^ ".lt_s"
+    | Lt_u -> (pp_type vt) ^ ".lt_u"
+    | Sub -> (pp_type vt) ^ ".sub"
+    | Shr_u -> (pp_type vt) ^ ".shr_u"
+    | Shl -> (pp_type vt) ^ ".shl"
+    | And -> (pp_type vt) ^ ".and"
+    | Or -> (pp_type vt) ^ ".or")
   | WI_Call idx -> "call " ^ Int.to_string idx
   | WI_Drop -> "drop"
   | WI_LocalGet idx -> "local.get " ^ Int.to_string idx
   | WI_LocalSet idx -> "local.set " ^ Int.to_string idx
   | WI_GlobalGet idx -> "global.get " ^ Int.to_string idx
   | WI_GlobalSet idx -> "global.set " ^ Int.to_string idx
-  | WI_Load _ -> "i32.load"
-  | WI_Store _ -> "i32.store"
+  | WI_Load (_, vt) -> (pp_type vt) ^ ".load" 
+  | WI_Store (_, vt) -> (pp_type vt) ^ ".store"
   | WI_Block (t, b) ->
       "block " ^ pp_block_type t ^ nl
       ^ pp_instructions (indent + 2) b
@@ -182,7 +188,10 @@ let pp_function (f : wasm_func) =
   "(func" ^ export ^ params ^ result ^ nl ^ locals ^ nl ^ body ^ nl ^ ")"
 
 let pp_global g =
-  let t = if g.mut then "(mut i32)" else "i32"
+  let t = 
+    match g.gtype.t with
+    | I32 -> if g.mut then "(mut i32)" else "i32"
+    | I64 -> if g.mut then "(mut i64)" else "i64"
   and init =
     match g.const with
     | [ instr ] -> pp_instruction 0 instr

@@ -22,9 +22,9 @@ let example1_module : wasm_module =
               WI_Nop;
               WI_LocalGet 0;
               WI_LocalGet 1;
-              WI_BinOp Add;
-              WI_Const 0;
-              WI_BinOp Eq;
+              WI_BinOp (Add, I32);
+              WI_Const (0, I32);
+              WI_BinOp (Eq, I32);
               WI_LocalSet 0
               (* WI_If
                      ( FunType ([], Public, []),
@@ -69,11 +69,11 @@ let store_and_load_module (mem_size : int) (store_addr : int) (load_addr : int)
           locals = [ { t = I32; lbl = Public } ];
           body =
             [
-              WI_Const store_addr;
+              WI_Const (store_addr, I32);
               WI_LocalGet 0;
-              WI_Store store_label;
-              WI_Const load_addr;
-              WI_Load load_label;
+              WI_Store (store_label, I32);
+              WI_Const (load_addr, I32);
+              WI_Load (load_label, I32);
             ];
           export_name = Some "foo";
         };
@@ -103,7 +103,7 @@ let bubblesort_module : wasm_module =
     memory = Some { size = 10 };
     globals =
       [ { (* length *)
-          gtype = i32Public; const = [ WI_Const 10 ]; mut = true } ];
+          gtype = i32Public; const = [ WI_Const (10, I32) ]; mut = true } ];
     function_imports =
       [
         ("env", "write_char", FunType ([ i32Public ], Public, []));
@@ -120,7 +120,7 @@ let bubblesort_module : wasm_module =
             [
               WI_LocalGet 0;
               WI_GlobalSet 0;
-              WI_Const 0;
+              WI_Const (0, I32);
               WI_LocalGet 0;
               WI_Call 4 (* init_vals *);
             ];
@@ -137,18 +137,18 @@ let bubblesort_module : wasm_module =
           body =
             [
               WI_LocalGet 1;
-              WI_Const 0;
-              WI_BinOp Eq;
+              WI_Const (0, I32);
+              WI_BinOp (Eq, I32);
               WI_BrIf 0 (* return *);
               WI_LocalGet 0;
               WI_Call 2 (* get_random *);
-              WI_Store Public;
+              WI_Store (Public, I32);
               WI_LocalGet 0;
-              WI_Const 4;
-              WI_BinOp Add;
+              WI_Const (4 , I32);
+              WI_BinOp (Add, I32);
               WI_LocalGet 1;
-              WI_Const 1;
-              WI_BinOp Sub;
+              WI_Const (1, I32);
+              WI_BinOp (Sub, I32);
               WI_Call 4 (* self *);
             ];
           export_name = None;
@@ -159,13 +159,13 @@ let bubblesort_module : wasm_module =
           locals = [];
           body =
             [
-              WI_Const 40 (* ( *);
+              WI_Const (40, I32) (* ( *);
               WI_Call 0;
-              WI_Const 0;
+              WI_Const (0, I32);
               WI_Call 6;
-              WI_Const 32 (* space *);
+              WI_Const (32, I32) (* space *);
               WI_Call 0;
-              WI_Const 41 (* ) *);
+              WI_Const (41, I32) (* ) *);
               WI_Call 0;
             ];
           export_name = Some "print";
@@ -178,18 +178,18 @@ let bubblesort_module : wasm_module =
             [
               WI_LocalGet 0;
               WI_GlobalGet 0;
-              WI_BinOp Ge_s;
+              WI_BinOp (Ge_s, I32);
               WI_BrIf 0;
-              WI_Const 32 (* space *);
+              WI_Const (32, I32) (* space *);
               WI_Call 0 (* write_char *);
               WI_LocalGet 0;
-              WI_Const 4;
-              WI_BinOp Mul;
-              WI_Load Public;
+              WI_Const (4, I32);
+              WI_BinOp (Mul, I32);
+              WI_Load (Public, I32);
               WI_Call 1 (* write_int*);
               WI_LocalGet 0;
-              WI_Const 1;
-              WI_BinOp Add;
+              WI_Const (1, I32);
+              WI_BinOp (Add, I32);
               WI_Call 6 (* self*);
             ];
           export_name = None;
@@ -199,11 +199,11 @@ let bubblesort_module : wasm_module =
           locals = [];
           body =
             [
-              WI_Const 0;
-              WI_Const 0;
+              WI_Const (0, I32);
+              WI_Const (0, I32);
               WI_Call 8;
-              WI_Const 0;
-              WI_BinOp Eq;
+              WI_Const (0, I32);
+              WI_BinOp (Eq, I32);
               WI_BrIf 0 (* return *);
               WI_Call 7 (* sort helper *);
             ];
@@ -223,49 +223,49 @@ let bubblesort_module : wasm_module =
                   [
                     WI_LocalGet 1;
                     WI_GlobalGet 0;
-                    WI_Const 2;
-                    WI_BinOp Sub;
+                    WI_Const (2, I32);
+                    WI_BinOp (Sub, I32);
                     WI_LocalGet 0;
-                    WI_BinOp Lt_s;
+                    WI_BinOp (Lt_s, I32);
                     WI_BrIf 1;
                     WI_Drop;
                   ] );
               WI_LocalGet 0;
-              WI_Const 4;
-              WI_BinOp Mul;
+              WI_Const (4, I32);
+              WI_BinOp (Mul, I32);
               WI_LocalSet 2;
               WI_LocalGet 0;
-              WI_Const 1;
-              WI_BinOp Add;
-              WI_Const 4;
-              WI_BinOp Mul;
+              WI_Const (1, I32);
+              WI_BinOp (Add, I32);
+              WI_Const (4, I32);
+              WI_BinOp (Mul, I32);
               WI_LocalSet 3;
               WI_Block
                 ( BlockType ([], []),
                   [
                     (* swap *)
                     WI_LocalGet 2;
-                    WI_Load Public;
+                    WI_Load (Public, I32);
                     WI_LocalGet 3;
-                    WI_Load Public;
-                    WI_BinOp Le_s;
+                    WI_Load (Public, I32);
+                    WI_BinOp (Le_s, I32);
                     WI_BrIf 0;
                     WI_LocalGet 2;
-                    WI_Load Public;
+                    WI_Load (Public, I32);
                     WI_LocalSet 4;
                     WI_LocalGet 2;
                     WI_LocalGet 3;
-                    WI_Load Public;
-                    WI_Store Public;
+                    WI_Load (Public, I32);
+                    WI_Store (Public, I32);
                     WI_LocalGet 3;
                     WI_LocalGet 4;
-                    WI_Store Public;
-                    WI_Const 1;
+                    WI_Store (Public, I32);
+                    WI_Const (1, I32);
                     WI_LocalSet 1;
                   ] );
               WI_LocalGet 0;
-              WI_Const 1;
-              WI_BinOp Add;
+              WI_Const (1, I32);
+              WI_BinOp (Add, I32);
               WI_LocalGet 1;
               WI_Call 8;
             ];
@@ -304,23 +304,23 @@ let sequential_mem_store_module (mem_size : int) =
                           WI_LocalGet 0;
                           (* ;; current addr *)
                           WI_LocalGet 2;
-                          WI_BinOp Lt_s;
+                          WI_BinOp (Lt_s, I32);
                           WI_BrIf 1;
                           WI_LocalGet 2;
                           (* get_random *)
-                          WI_Const 42;
-                          WI_Store Secret;
+                          WI_Const (42, I32);
+                          WI_Store (Secret, I32);
                           WI_LocalGet 2;
                           (* offset *)
                           WI_LocalGet 1;
-                          WI_BinOp Add;
+                          WI_BinOp (Add, I32);
                           (* save new addr *)
                           WI_LocalSet 3;
                           WI_LocalGet 3;
                           (* load old addr *)
                           WI_LocalGet 2;
                           (* check for overflow *)
-                          WI_BinOp Lt_u;
+                          WI_BinOp (Lt_u, I32);
                           WI_BrIf 1;
                           WI_LocalGet 3;
                           WI_LocalSet 2;
@@ -359,21 +359,21 @@ let sequential_mem_store_load_module (mem_size : int) =
                           (* max addr, e.g. 2 ^ ((log memory.size) + 16) - 4 *)
                           WI_LocalGet 2;
                           (* ;; current addr *)
-                          WI_BinOp Lt_s;
+                          WI_BinOp (Lt_s, I32);
                           WI_BrIf 1;
                           WI_LocalGet 2;
-                          WI_Const 42;
-                          WI_Store Secret;
+                          WI_Const (42, I32);
+                          WI_Store (Secret, I32);
                           WI_LocalGet 2;
                           WI_LocalGet 1;
                           (* offset *)
-                          WI_BinOp Add;
+                          WI_BinOp (Add, I32);
                           WI_LocalSet 3;
                           (* save new addr *)
                           WI_LocalGet 3;
                           WI_LocalGet 2;
                           (* load old addr *)
-                          WI_BinOp Lt_u;
+                          WI_BinOp (Lt_u, I32);
                           (* check for overflow *)
                           WI_BrIf 1;
                           WI_LocalGet 3;
