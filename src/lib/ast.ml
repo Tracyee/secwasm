@@ -29,22 +29,23 @@ type binop =
 [@@@ocamlformat "disable"]
 
 type wasm_instruction =
-  | WI_Unreachable                                                    (* trap unconditionally *)
-  | WI_Drop                                                           (* drop value *)
-  | WI_Const of (int * value_type)                                    (* constant *)
-  | WI_BinOp of (binop * value_type)                                  (* binary numeric operator, deviates a bit from spec *)
-  | WI_Call of int                                                    (* call function *)
-  | WI_LocalGet of int                                                (* read local variable *)
-  | WI_LocalSet of int                                                (* write local variable *)
-  | WI_GlobalGet of int                                               (* read global variable *)
-  | WI_GlobalSet of int                                               (* write global variable *)
-  | WI_Load of (SimpleLattice.t * value_type)                         (* read memory at address *)
-  | WI_Store of (SimpleLattice.t * value_type)                        (* write memory at address *)
-  | WI_Block of block_type * wasm_instruction list                    (* block *)
-  | WI_Loop of block_type * wasm_instruction list                     (* loop *)
-  | WI_Br of int                                                      (* unconditional branch *)
-  | WI_BrIf of int                                                    (* conditional branch *)
-  | WI_Nop
+  | WI_Unreachable                                                              (* trap unconditionally *)
+  | WI_Drop                                                                     (* drop value *)
+  | WI_Const of (int * value_type)                                              (* constant *)
+  | WI_BinOp of (binop * value_type)                                            (* binary numeric operator, deviates a bit from spec *)
+  | WI_Call of int                                                              (* call function *)
+  | WI_LocalGet of int                                                          (* read local variable *)
+  | WI_LocalSet of int                                                          (* write local variable *)
+  | WI_GlobalGet of int                                                         (* read global variable *)
+  | WI_GlobalSet of int                                                         (* write global variable *)
+  | WI_Load of (SimpleLattice.t * value_type)                                   (* read memory at address *)
+  | WI_Store of (SimpleLattice.t * value_type)                                  (* write memory at address *)
+  | WI_Block of block_type * wasm_instruction list                              (* block *)
+  | WI_Loop of block_type * wasm_instruction list                               (* loop *)
+  | WI_Br of int                                                                (* unconditional branch *)
+  | WI_BrIf of int                                                              (* conditional branch *)
+  | WI_Nop                                                                      (* nop instruction *)
+  | WI_IfElse of block_type * wasm_instruction list * wasm_instruction list     (* if-then-else *)
 
 [@@@ocamlformat "enable"]
 
@@ -147,6 +148,12 @@ let rec pp_instruction (indent : int) (instr : wasm_instruction) =
       ^ spaces indent ^ "end"
   | WI_Br idx -> "br " ^ Int.to_string idx
   | WI_BrIf idx -> "br_if " ^ Int.to_string idx
+  | WI_IfElse (t, then_br, else_br) ->
+    "if " ^ pp_block_type t ^ nl 
+    ^ pp_instructions (indent + 2) then_br 
+    ^ spaces indent ^ "else" ^ nl
+    ^ pp_instructions (indent + 2) else_br
+    ^ spaces indent ^ "end"
 
 let pp_fn_params ftype =
   let ps = match ftype with FunType (plist, _, _) -> plist in
