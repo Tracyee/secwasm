@@ -3,6 +3,275 @@ open Secwasm.Type_check
 open Secwasm.Dynamic_check
 open Secwasm.Sec
 
+(* 
+  (module
+    (func (export "hello") (param i64<Public> i64<Public>) (result i32<Public>)
+      nop
+      local.get 0
+      local.get 1
+      i64.eq
+      if (result i32<Public>)
+        nop
+        i32.const 1
+      else
+        nop
+        i32.const 0
+      end
+    )
+  )    
+*)
+let demo_module1 : wasm_module =
+  {
+    memory = None;
+    globals = [];
+    function_imports = [];
+    functions =
+      [
+        {
+          ftype =
+            FunType
+              ( [ { t = I64; lbl = Public }; { t = I64; lbl = Public } ],
+                Public,
+                [ { t = I32; lbl = Public } ] );
+          locals = [ ];
+          body =
+            [
+              WI_Nop;
+              WI_LocalGet 0;
+              WI_LocalGet 1;
+              WI_BinOp (Eq, I64);
+              WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ { t = I32; lbl = Public } ] ),
+                    [ WI_Nop; WI_Const (1, I32); ],
+                    [ WI_Nop; WI_Const (0, I32); ] );
+            ];
+          export_name = Some "hello";
+        };
+      ];
+  }
+
+(* 
+  (module
+    (func (export "hello") (param i64<Secret> i64<Public>) (result i32<Public>)
+      nop
+      local.get 0
+      local.get 1
+      i64.add
+      i64.const 0
+      i64.eq
+      if (result i32<Public>)
+        nop
+        i32.const 1
+      else
+        nop
+        i32.const 0
+      end
+    )
+  )    
+*)
+let demo_module2 : wasm_module =
+  {
+    memory = None;
+    globals = [];
+    function_imports = [];
+    functions =
+      [
+        {
+          ftype =
+            FunType
+              ( [ { t = I64; lbl = Secret }; { t = I64; lbl = Public } ],
+                Public,
+                [ { t = I32; lbl = Public } ] );
+          locals = [ ];
+          body =
+            [
+              WI_Nop;
+              WI_LocalGet 0;
+              WI_LocalGet 1;
+              WI_BinOp (Add, I64);
+              WI_Const (0, I64);
+              WI_BinOp (Eq, I64);
+              WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ { t = I32; lbl = Public } ] ),
+                    [ WI_Nop; WI_Const (1, I32); ],
+                    [ WI_Nop; WI_Const (0, I32); ] );
+            ];
+          export_name = Some "hello";
+        };
+      ];
+  }
+
+(* 
+  (module
+  (global (mut i64) i64<Public>)
+    (func (export "hello") (param i64<Public> i64<Public>) (result i32<Public>)
+      local.get 0
+      local.get 1
+      i64.eq
+      if (result i32<Public>)
+        i32.const 10
+      else
+        i32.const 20
+      end
+      global.set 0
+      global.get 0
+    )
+  )    
+*)
+let demo_module3 : wasm_module =
+  {
+    memory = None;
+    globals = [
+      {
+        gtype = { t = I32; lbl = Public };
+        const = [ WI_Const (0, I32) ];
+        mut = true;
+      };
+    ];
+    function_imports = [];
+    functions =
+      [
+        {
+          ftype =
+            FunType
+              ( [ { t = I64; lbl = Public }; { t = I64; lbl = Public } ],
+                Public,
+                [ { t = I32; lbl = Public } ] );
+          locals = [ ];
+          body =
+            [
+              WI_LocalGet 0;
+              WI_LocalGet 1;
+              WI_BinOp (Eq, I64);
+              WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ { t = I32; lbl = Public } ] ),
+                    [ WI_Const (10, I32); ],
+                    [ WI_Const (20, I32); ] );
+              WI_GlobalSet 0;
+              WI_GlobalGet 0;
+            ];
+          export_name = Some "hello";
+        };
+      ];
+  }
+
+(* 
+  (module
+  (global (mut i64) i64<Public>)
+    (func (export "hello") (param i64<Secret> i64<Public>) (result i32<Public>)
+      local.get 0
+      local.get 1
+      i64.eq
+      if (result i32<Public>)
+        i32.const 10
+      else
+        i32.const 20
+      end
+      global.set 0
+      global.get 0
+    )
+  )    
+*)
+let demo_module4 : wasm_module =
+  {
+    memory = None;
+    globals = [
+      {
+        gtype = { t = I64; lbl = Public };
+        const = [ WI_Const (0, I64) ];
+        mut = true;
+      };
+    ];
+    function_imports = [];
+    functions =
+      [
+        {
+          ftype =
+            FunType
+              ( [ { t = I64; lbl = Secret }; { t = I64; lbl = Public } ],
+                Public,
+                [ { t = I64; lbl = Public } ] );
+          locals = [ ];
+          body =
+            [
+              WI_LocalGet 1;
+              WI_Const (100, I64);
+              WI_BinOp (Eq, I64);
+              WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ ] ),
+                    [ WI_LocalGet 1; WI_GlobalSet 0; ],
+                    [ WI_LocalGet 0; WI_GlobalSet 0; ] );
+              WI_GlobalGet 0;
+            ];
+          export_name = Some "hello";
+        };
+      ];
+  }
+(* 
+  Implicit flow
+  (module
+  (global (mut i64) i64<Public>)
+    (func (export "hello") (param i64<Secret> i64<Public>) (result i32<Public>)
+      local.get 0
+      local.get 1
+      i64.eq
+      if
+        local.get 1
+        global.set 0
+      else
+        i64.const 0
+        global.set 0
+      end
+      global.get 0
+    )
+  )    
+*)
+let demo_module5 : wasm_module =
+  {
+    memory = None;
+    globals = [
+      {
+        gtype = { t = I64; lbl = Public };
+        const = [ WI_Const (0, I64) ];
+        mut = true;
+      };
+    ];
+    function_imports = [];
+    functions =
+      [
+        {
+          ftype =
+            FunType
+              ( [ { t = I64; lbl = Secret }; { t = I64; lbl = Public } ],
+                Public,
+                [ { t = I64; lbl = Public } ] );
+          locals = [ ];
+          body =
+            [
+              WI_LocalGet 0;
+              WI_LocalGet 1;
+              WI_BinOp (Eq, I64);
+              WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Secret } ],
+                        [ ] ),
+                    [ WI_LocalGet 1; WI_GlobalSet 0; ],
+                    [ WI_Const (0, I64); WI_GlobalSet 0; ] );
+              WI_GlobalGet 0;
+            ];
+          export_name = Some "hello";
+        };
+      ];
+  }
+
 let example1_module : wasm_module =
   {
     memory = None;
@@ -25,12 +294,7 @@ let example1_module : wasm_module =
               WI_BinOp (Add, I32);
               WI_Const (0, I32);
               WI_BinOp (Eq, I32);
-              WI_LocalSet 0
-              (* WI_If
-                     ( FunType ([], Public, []),
-                       [ WI_Nop; WI_Const 2; WI_LocalSet 0 ],
-                       [ WI_Const 42; WI_LocalSet 0 ] );
-                 ]; *);
+              WI_LocalSet 0;
             ];
           export_name = Some "hello";
         };
@@ -496,6 +760,16 @@ let set_module s =
   | "seq_mem_store_load" ->
       (* the produced wasm module can be run with the Makefile *)
       wmodule := Some (sequential_mem_store_load_module 32768)
+  | "demo1" ->
+      wmodule := Some demo_module1
+  | "demo2" ->
+      wmodule := Some demo_module2
+  | "demo3" ->
+      wmodule := Some demo_module3
+  | "demo4" ->
+      wmodule := Some demo_module4
+  | "demo5" ->
+      wmodule := Some demo_module5
   | _ -> ()
 
 let speclist =
