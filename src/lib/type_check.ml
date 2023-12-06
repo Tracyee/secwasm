@@ -365,7 +365,7 @@ let rec check_instr ((g, c) : stack_of_stacks_type * context)
               match lift (lcond <> pc) ((st @ st', pc) :: g1) with
               | [] -> raise (InternalError "stack-of-stacks ill-formed")
               | (st'', pc') :: g1' -> (((st'', pc') :: g1') @ g2, c)))
-      | WI_Loop _ -> raise (NotImplemented "loops")
+      | WI_Loop (bt, exp) -> type_check_loop (g, c) (bt, exp)
       | WI_IfElse (bt, exp1, exp2) -> type_check_if_else (g, c) (bt, exp1, exp2))
   | _ -> raise (InternalError "stack-of-stacks ill-formed")
 
@@ -409,6 +409,75 @@ and type_check_if_else ((g, c) : stack_of_stacks_type * context)
         | _ -> raise (InternalError "blocks: stack-of-stacks ill-formed"))
       | _ -> raise (InternalError "blocks: stack-of-stacks ill-formed"))
 
+and type_check_loop ((g, c) : stack_of_stacks_type * context)
+    ((BlockType (bt_in, bt_out), instrs) : block_type * wasm_instruction list) = 
+  let tau1, pc, st, g'', c' = match g with (* g'' = gamma in secwasm *)
+  | [] -> raise (InternalError "blocks: stack-of-stacks ill-formed")
+  | (stack, pc) :: g -> 
+    (
+      let c' = { c with labels = bt_in :: c.labels } in
+      if List.length bt_in > List.length stack then
+        raise (err_block1 false (List.length bt_in) (List.length stack));
+      let tau1, st = split_at_index (List.length bt_in) stack in
+      if not (leq_stack tau1 bt_in) then
+        raise (err_block3 false bt_in tau1);
+      tau1, pc, st, g, c'
+    )
+  in
+  match g with
+  | [] -> raise (InternalError "blocks: stack-of-stacks ill-formed")
+  (* <tau1, pc'> :: <st', pc''> :: gamma' *)
+  | (tau1', pc') :: (st', pc'') :: g' when (leq_stack tau1' bt_in) ->
+    (
+      (* <tau1, pc'> :: <st', pc''> :: gamma', label(tau1): C  *)
+      match check_seq ((tau1, pc') :: (st', pc'') :: g', c') instrs with
+      (* <tau2, pc'> :: <st', pc''> :: gamma' - top right *)
+      | (tau2, pc''') :: (st'', pc'''') :: g''', _ 
+      when pc''' = pc' && pc'''' = pc'' && st'' = st' && g''' = g''->
+        (
+          if List.length tau2 != List.length bt_out then
+            raise
+              (err_block2 false (List.length bt_out) (List.length tau2));
+          if not (leq_stack tau2 bt_out) then
+            raise (err_block4 false bt_out tau2);
+          if not (pc <<= pc') then (raise (TypingError "failed pc <<= pc'"));
+          if not (pc <<= pc'') then (raise (TypingError "failed pc <<= pc''"));
+          if not (List.for_all2 (fun v1 v2 -> v1.lbl <<= v2.lbl) st st') then
+            (raise (TypingError "failed st <<= st'"));
+          (* <tau2 :: st', pc ⊔ pc''> :: gamma'*)
+          ((bt_out @ st', pc <> pc'') :: g', c)
+        )
+      | _ -> raise (InternalError "blocks: stack-of-stacks ill-formed"))
+  | _::_ -> raise (InternalError "blocks: stack-of-stacks ill-formed")
+      
+      (* (
+        (* find label(tau1): C *)
+        let c' = { c with labels = bt_in :: c.labels } in
+        if List.length bt_in > List.length stack then
+          raise (err_block1 false (List.length bt_in) (List.length stack));
+        (* naming: bt_in and bt_out refer to tau1 and tau2 that are annotated
+           tau1 refers to the type actually found, tau2 to the type that is computed based on the actual inputs
+        *)
+        (* <tau1 :: st, pc> *)
+        let tau1, st = split_at_index (List.length bt_in) stack in
+        (* actual input types <= labeled input types *)
+        if not (leq_stack tau1 bt_in) then
+          raise (err_block3 false bt_in tau1);
+        (* check expression with updated stack, context *)
+        (* <tau1, pc'> :: <st', pc''> :: gamma', label(tau1): C *)
+        match check_seq ((tau1, pc') :: (st', pc'') :: g', c') instrs with
+        (* computed pc' is discarded *)
+        (* <tau2, pc'> :: <st', pc''> :: gamma' - top right *)
+        | (tau2, pc') :: (st', pc'') :: g', _ ->
+            if List.length tau2 != List.length bt_out then
+              raise
+                (err_block2 false (List.length bt_out) (List.length tau2));
+            if not (leq_stack tau2 bt_out) then
+              raise (err_block4 false bt_out tau2);
+            (* <tau2 :: st', pc ⊔ pc''> :: gamma'*)
+            ((bt_out @ st', pc <> pc'') :: g', c)
+        | _ -> raise (InternalError "blocks: stack-of-stacks ill-formed")) *)
+
 and  type_check_block ((g, c) : stack_of_stacks_type * context)
     ((BlockType (bt_in, bt_out), instrs) : block_type * wasm_instruction list)
     (is_func_body : bool) =
@@ -422,23 +491,23 @@ and  type_check_block ((g, c) : stack_of_stacks_type * context)
       (* naming: bt_in and bt_out refer to tau1 and tau2 that are annotated
          tau1 refers to the type actually found, tau2 to the type that is computed based on the actual inputs
       *)
-      (* <tau1 :: st, pc> - bottom left *)
+      (* <tau1 :: st, pc> *)
       let tau1, st = split_at_index (List.length bt_in) stack in
       (* actual input types <= labeled input types *)
       if not (leq_stack tau1 bt_in) then
         raise (err_block3 is_func_body bt_in tau1);
       (* check expression with updated stack, context *)
-      (* <tau1, pc> :: <st, pc> :: gamma, label(tau2): C - top left *)
+      (* <tau1, pc> :: <st, pc> :: gamma, label(tau2): C *)
       match check_seq ((tau1, pc) :: (st, pc) :: g, c') instrs with
       (* computed pc' is discarded *)
-      (* <tau2, pc'> :: <st', pc''> :: gamma' - top right *)
+      (* <tau2, pc'> :: <st', pc''> :: gamma' *)
       | (tau2, _) :: (st', pc'') :: g', _ ->
           if List.length tau2 != List.length bt_out then
             raise
               (err_block2 is_func_body (List.length bt_out) (List.length tau2));
           if not (leq_stack tau2 bt_out) then
             raise (err_block4 is_func_body bt_out tau2);
-          (* <tau2 :: st', pc ⊔ pc''> :: gamma' - bottom right *)
+          (* <tau2 :: st', pc ⊔ pc''> :: gamma' *)
           ((bt_out @ st', pc <> pc'') :: g', c) 
       | _ -> raise (InternalError "blocks: stack-of-stacks ill-formed"))
 

@@ -4730,6 +4730,69 @@ let _ =
           };
         ];
     }
+(*
+  Test loop typechecks
+
+  (func
+  (result i32)
+  (local i32)
+      i32.const 0
+      local.set 0
+      loop
+        local.get 0
+        i32.const 6
+        i32.ge_s
+        br_if 1
+        local.get 0
+        i32.const 1
+        i32.add
+        local.set 0
+        br 0
+      end
+      local.get 0
+  )
+*)
+let _ =
+  test "loop-1" pos_test
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype =
+              FunType
+                ( [ ],
+                  Public,
+                  [ { t = I32; lbl = Public } ] );
+            locals = [ { t = I32; lbl = Public } ];
+            body =
+              [
+                WI_Const (0, I32);
+                WI_LocalSet 0;
+                WI_Loop
+                  ( BlockType
+                      ( [ ],
+                        [ ] ),
+                    [ 
+                      WI_LocalGet 0; 
+                      WI_Const (6, I32);
+                      WI_BinOp (Ge_s, I32);
+                      WI_BrIf 1;
+
+                      WI_LocalGet 0; 
+                      WI_Const (1, I32);
+                      WI_BinOp (Add, I32);
+                      WI_LocalSet 0;
+                      WI_Br 0;
+                    ] );
+                WI_LocalGet 0;
+              ];
+            export_name = None;
+          };
+        ];
+    }
 (*  ================= End of tests ================== *)
 (*  Run suite! *)
 
