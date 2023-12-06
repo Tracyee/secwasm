@@ -4381,6 +4381,355 @@ let _ =
           ];
       }
 
+(* ======= IfElse Modules under test  ========= *)
+(*
+  If branch output stack has higher security level than specified result security level
+
+  (module
+    (global i32<Secret> (i32.const 42)) (global i32<Public> (i32.const 42))
+    (func
+      global.get 0
+      (if ϵ -> i32<Public>
+        global.get 0
+      else
+        global.get 1
+      end)
+    )
+  )
+*)
+let _ =
+  test "if output stack incorrect security level"
+    (neg_test
+       (err_block4 false
+          [ { t = I32; lbl = Public } ]
+          [ { t = I32; lbl = Secret } ]))
+    {
+      memory = None;
+      globals =
+        [
+          {
+            gtype = { t = I32; lbl = Secret };
+            const = [ WI_Const (42, I32) ];
+            mut = false;
+          };
+          {
+            gtype = { t = I32; lbl = Public };
+            const = [ WI_Const (42, I32) ];
+            mut = false;
+          };
+        ];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype = FunType ([], Public, []);
+            locals = [];
+            body =
+              [
+                WI_GlobalGet 0;
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Secret } ],
+                        [ { t = I32; lbl = Public } ] ),
+                    [ WI_GlobalGet 0 ],
+                    [ WI_GlobalGet 1 ] );
+              ];
+            export_name = None;
+          };
+        ];
+    }
+(*
+  Test if-else typechecks
+
+  (func
+  (param i32) (result i32)
+      local.get 0
+      if (result i32)
+        nop
+      else
+        nop
+      end
+  )
+*)
+let _ =
+  test "if-1" pos_test
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype =
+              FunType
+                ( [ { t = I32; lbl = Public } ],
+                  Public,
+                  [ { t = I32; lbl = Public } ] );
+            locals = [ { t = I32; lbl = Public } ];
+            body =
+              [
+                WI_LocalGet 0;
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [] ),
+                    [ WI_Nop ],
+                    [ WI_Nop ] );
+                WI_LocalGet 0;
+              ];
+            export_name = None;
+          };
+        ];
+    }
+(*
+  Test valid stack value for if-else
+
+  (func
+  (param i64 i64) (result i64)
+      local.get 0
+      local.get 1
+      i64.eq ;; should be i32!
+      if (result i64)
+        local.get 0
+      else
+        local.get 1
+      end
+  )
+*)
+
+let _ =
+  test "if valid toplevel stack value" pos_test
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype =
+              FunType
+                ( [ { t = I64; lbl = Public }; { t = I64; lbl = Public } ],
+                  Public,
+                  [ { t = I64; lbl = Public } ] );
+            locals = [ ];
+            body =
+              [
+                WI_LocalGet 0;
+                WI_LocalGet 1;
+                WI_BinOp (Eq, I64);
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ { t = I64; lbl = Public } ] ),
+                    [ WI_LocalGet 0; ],
+                    [ WI_LocalGet 1; ] );
+              ];
+            export_name = None;
+          };
+        ];
+    }
+(*
+  Test invalid stack value for if-else
+
+  (func
+  (param i64 i64) (result i64)
+      local.get 0
+      local.get 1
+      i64.add 
+      if (result i64)
+        local.get 0
+      else
+        local.get 1
+      end
+  )
+*)
+
+let _ =
+  test "if invalid toplevel stack value" 
+    (neg_test
+       (err_block3 false
+          [ { t = I32; lbl = Public } ]
+          [ { t = I64; lbl = Public } ]))
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype =
+              FunType
+                ( [ { t = I64; lbl = Public }; { t = I64; lbl = Public } ],
+                  Public,
+                  [ { t = I64; lbl = Public } ] );
+            locals = [ ];
+            body =
+              [
+                WI_LocalGet 0;
+                WI_LocalGet 1;
+                WI_BinOp (Add, I64);
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ], (* IfElse should always only accept I32 *)
+                        [ { t = I64; lbl = Public } ] ),
+                    [ WI_LocalGet 0; ],
+                    [ WI_LocalGet 1; ] );
+              ];
+            export_name = None;
+          };
+        ];
+    }
+(*
+  Test invalid input type value for if-else block
+
+  (func
+  (param i64 i64) (result i64)
+      local.get 0
+      local.get 1
+      i64.eq ;; should be i32!
+      if (result i64)
+        local.get 0
+      else
+        local.get 1
+      end
+  )
+*)
+
+let _ =
+  test "if invalid input block type value" 
+    (neg_test (TypingError "if expected top of stack to be of i32 type"))
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype =
+              FunType
+                ( [ { t = I64; lbl = Public }; { t = I64; lbl = Public } ],
+                  Public,
+                  [ { t = I64; lbl = Public } ] );
+            locals = [ ];
+            body =
+              [
+                WI_LocalGet 0;
+                WI_LocalGet 1;
+                WI_BinOp(Add, I64);
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I64; lbl = Public } ],
+                        [ { t = I64; lbl = Public } ] ),
+                    [ WI_LocalGet 0; ],
+                    [ WI_LocalGet 1; ] );
+              ];
+            export_name = None;
+          };
+        ];
+    }
+  (*
+  Simple nested if-else
+
+  (module
+    (func
+      i32.const 1
+      if (result i32)
+        i32.const 0
+        if (result i32)
+          i32.const 1
+        else
+          i32.const 0 
+        end
+      else 
+        i32.const 1
+        if (result i32)
+          i32.const 1
+        else
+          i32.const 0 
+        end
+      end
+    )
+  )
+*)
+let _ =
+  test "nested if-else" pos_test
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype = FunType ([], Public, [ { t = I32; lbl = Public } ]);
+            locals = [];
+            body =
+              [
+                WI_Const (1, I32);
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ { t = I32; lbl = Public } ] ),
+                    [ 
+                      WI_Const (0, I32);
+                      WI_IfElse
+                        ( BlockType
+                            ( [ { t = I32; lbl = Public } ],
+                              [ { t = I32; lbl = Public } ] ),
+                          [ WI_Const (1, I32); ],
+                          [ WI_Const (0, I32); ] );
+                    ],
+                    [ 
+                      WI_Const (1, I32);
+                      WI_IfElse
+                        ( BlockType
+                            ( [ { t = I32; lbl = Public } ],
+                              [ { t = I32; lbl = Public } ] ),
+                          [ WI_Const (1, I32); ],
+                          [ WI_Const (0, I32); ] );
+                    ] );
+              ];
+            export_name = None;
+          };
+        ];
+    }
+(*
+  Ill-typed if-else since stack is empty
+
+  (module
+    (func
+      if (result i32)
+        nop
+      else 
+        nop
+      end
+    )
+  )
+*)
+let _ =
+  test "ill-typed if-else"
+    (neg_test (err_block1 false 1 0))
+    {
+      memory = None;
+      globals = [];
+      function_imports = [];
+      functions =
+        [
+          {
+            ftype = FunType ([], Public, [ ]);
+            locals = [];
+            body =
+              [
+                WI_IfElse
+                  ( BlockType
+                      ( [ { t = I32; lbl = Public } ],
+                        [ { t = I32; lbl = Public } ] ),
+                    [ WI_Nop ],
+                    [ WI_Nop ] );
+              ];
+            export_name = None;
+          };
+        ];
+    }
 (*  ================= End of tests ================== *)
 (*  Run suite! *)
 

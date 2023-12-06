@@ -12,6 +12,7 @@
 _build/
 _coverage/
 _benchmark/
+_demo/
 
 # ocamlbuild targets
 *.byte

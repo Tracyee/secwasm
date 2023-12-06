@@ -81,7 +81,15 @@ let pp_labeled_type (t : labeled_value_type) =
   pp_type t.t (* TODO: have separate pp <== what is meant by this? *)
 
 let nl = "\n"
-
+let pp_if_else_type (BlockType (_, bt_out)) =
+  let result =
+    if List.length bt_out > 0 then
+      " (result"
+      ^ List.fold_left (fun _s l -> " " ^ pp_labeled_type l ^ _s) "" bt_out
+      ^ ")"
+    else ""
+  in
+  result
 let pp_block_type (BlockType (bt_in, bt_out)) =
   let params =
     if List.length bt_in > 0 then
@@ -149,7 +157,7 @@ let rec pp_instruction (indent : int) (instr : wasm_instruction) =
   | WI_Br idx -> "br " ^ Int.to_string idx
   | WI_BrIf idx -> "br_if " ^ Int.to_string idx
   | WI_IfElse (t, then_br, else_br) ->
-    "if " ^ pp_block_type t ^ nl 
+    "if " ^ pp_if_else_type t ^ nl 
     ^ pp_instructions (indent + 2) then_br 
     ^ spaces indent ^ "else" ^ nl
     ^ pp_instructions (indent + 2) else_br

@@ -4,6 +4,14 @@ help:
 	dune build
 	dune exec _build/default/bin/main.exe -- -help
 
+demo:
+	dune build
+	rm -rf _demo
+	mkdir -p _demo
+	dune exec _build/default/bin/main.exe -- -example demo$(num) -pp -out _demo/orig.wat
+	cd _demo && wat2wasm orig.wat
+	node ../testing/examples/demo.js
+	dune exec _build/default/bin/main.exe -- -example demo$(num) -typecheck
 run:
 	dune build
 	dune exec _build/default/bin/main.exe -- -example 1 -typecheck
@@ -71,3 +79,4 @@ coverage:
 	bisect-ppx-report summary
 	@echo "======================"
 	@echo "For summary see _coverage/index.html"
+
