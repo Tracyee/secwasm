@@ -127,8 +127,8 @@ let demo_module3 : wasm_module =
     memory = None;
     globals = [
       {
-        gtype = { t = I32; lbl = Public };
-        const = [ WI_Const (0, I32) ];
+        gtype = { t = I64; lbl = Public };
+        const = [ WI_Const (0, I64) ];
         mut = true;
       };
     ];
@@ -140,7 +140,7 @@ let demo_module3 : wasm_module =
             FunType
               ( [ { t = I64; lbl = Public }; { t = I64; lbl = Public } ],
                 Public,
-                [ { t = I32; lbl = Public } ] );
+                [ { t = I64; lbl = Public } ] );
           locals = [ ];
           body =
             [
@@ -150,9 +150,9 @@ let demo_module3 : wasm_module =
               WI_IfElse
                   ( BlockType
                       ( [ { t = I32; lbl = Public } ],
-                        [ { t = I32; lbl = Public } ] ),
-                    [ WI_Const (10, I32); ],
-                    [ WI_Const (20, I32); ] );
+                        [ { t = I64; lbl = Public } ] ),
+                    [ WI_Const (10, I64); ],
+                    [ WI_Const (20, I64); ] );
               WI_GlobalSet 0;
               WI_GlobalGet 0;
             ];
@@ -164,11 +164,11 @@ let demo_module3 : wasm_module =
 (* 
   (module
   (global (mut i64) i64<Public>)
-    (func (export "hello") (param i64<Secret> i64<Public>) (result i32<Public>)
+    (func (export "hello") (param i64<Secret> i64<Public>) (result i64<Public>)
       local.get 0
       local.get 1
       i64.eq
-      if (result i32<Public>)
+      if (result i64<Public>)
         i32.const 10
       else
         i32.const 20

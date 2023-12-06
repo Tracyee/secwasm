@@ -65,7 +65,7 @@ seqmem-benchmark:
 
 clean:
 	dune clean
-	rm -rf _coverage/ _benchmark
+	rm -rf _coverage/ _benchmark _demo/
 	rm -f *.wat *.wasm
 
 test:
